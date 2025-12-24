@@ -1,0 +1,110 @@
+{% extends 'pagefirst/base.html' %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Training Programs</title>
+</head>
+
+
+
+
+<body>
+
+
+<h1 class="calc-title">Calorie & Macronutrient Calculator</h1>
+
+
+
+<div class="calculator-wrapper">
+    <div class="calculator-container">
+        <form id="calc-form" method="post">
+            {% csrf_token %}
+
+            <label>Height (cm):</label><br>
+            <input type="number" name="height" placeholder="e.g. 176" required><br><br>
+
+            <label>Weight (kg):</label><br>
+            <input type="number" name="weight" placeholder="e.g. 60" required><br><br>
+
+            <label>Age:</label><br>
+            <input type="number" name="age" placeholder="e.g. 19" required><br><br>
+
+            <label>Sex:</label><br>
+            <select name="sex" required>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select><br><br>
+
+            <label>Activity level:</label><br>
+            <select name="activity" required>
+                <option value="1.2">Sedentary</option>
+                <option value="1.375">Lightly active</option>
+                <option value="1.55">Moderately active</option>
+                <option value="1.725">Very active</option>
+                <option value="1.9">Extremely active</option>
+            </select><br><br>
+
+            <label>Goal:</label><br>
+            <select name="goal" required>
+                <option value="cut">Cutting</option>
+                <option value="maintain">Maintenance</option>
+                <option value="bulk">Bulking</option>
+            </select><br><br>
+
+            <button type="submit">Calculate</button>
+
+        </form>
+    </div>
+</div>
+<br><br>
+
+<div class="result-box" id="result"
+     style="padding:15px; border:1px solid gray; margin-top:20px; display: none">
+
+    <h3>Result:</h3>
+    <p><b>BMR:</b> <span id="bmr"></span> kcal</p>
+    <p><b>TDEE:</b> <span id="tdee"></span></p>
+    <p><b>Target Calories:</b> <span id="target"></span> kcal</p>
+    <p><b>Protein:</b> <span id="protein"></span> g</p>
+    <p><b>Fat:</b> <span id="fat"></span> g</p>
+    <p><b>Carbs:</b> <span id="carbs"></span> g</p>
+
+</div>
+
+
+</body>
+<script>
+document.getElementById("calc-form").addEventListener("submit", async function(event){
+    event.preventDefault(); // stop refresh
+
+    let formData = new FormData(this);
+
+    let response = await fetch("/calculator/", {
+        method: "POST",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken":
+        document.querySelector("[name=csrfmiddlewaretoken]").value
+        },
+        body: formData
+    });
+
+    let data = await response.json();
+
+    document.getElementById("bmr").innerText = data.bmr;
+    document.getElementById("tdee").innerText = data.tdee;
+    document.getElementById("target").innerText = data.target_calories;
+    document.getElementById("protein").innerText = data.protein;
+    document.getElementById("fat").innerText = data.fat;
+    document.getElementById("carbs").innerText = data.carbs;
+
+    document.getElementById("result").style.display = "block";
+});
+</script>
+</html>
+{% endblock %}
+

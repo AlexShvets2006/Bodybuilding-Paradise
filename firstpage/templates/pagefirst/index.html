@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Training Programs</title>
+</head>
+<body>
+
+{% extends 'pagefirst/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="index-container">
+
+    <h1 class="index-title">Welcome to the Bodybuilding Paradise!</h1>
+
+    <div class="index-buttons">
+        {% load static %}
+
+
+        <a href="{% url 'programs' %}" class="index-card">
+            <img src="{% static 'Page1Stat/images/training.jpg' %}" alt="Training Programs" class="button-image">
+                <h2>Training Programs</h2>
+        </a>
+
+        <a href="{% url 'calculator' %}" class="index-card">
+            <img src="{% static 'Page1Stat/images/calories.jpg' %}" alt="Calorie and Macronutrient Calculator" class="button-image">
+                <h2>Calorie and Macronutrient Calculator</h2>
+        </a>
+
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+</body>
+</html>
+

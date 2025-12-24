@@ -1,0 +1,64 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'Page1Stat/style.css' %}">
+
+    <title>{% block title %}BodyBuilding Paradise{% endblock %}</title>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="logo">
+        <a href="{% url 'home' %}">Home</a>
+    </div>
+    <div class="nav-links">
+        <a href="{% url 'recommendations' %}" > Recommendations </a>
+        <a href="{% url 'motivation' %}" class="motivation-link" id="motivationLink" >
+            Motivation
+            <span class="motivation-indicator" id="motivationIndicator"></span>
+        </a>
+        <a href="{% url 'about' %}" > About </a>
+    </div>
+</div>
+
+<div>
+
+    {% if request.path != '/' %}
+    <a href="javascript:history.back()" class="back-btn">← Go Back </a>
+    {% endif %}
+
+    {% block content %}{%endblock%}
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const indicator = document.getElementById("motivationIndicator");
+    const link = document.getElementById("motivationLink");
+
+    if (!indicator || !link) return;
+
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const lastSeen = localStorage.getItem("motivationSeenDate");
+
+    // если сегодня ещё не заходил — показываем кружок
+    if (lastSeen !== today) {
+        indicator.style.display = "inline-block";
+    } else {
+        indicator.style.display = "none";
+    }
+
+    // при клике на Motivation
+    link.addEventListener("click", () => {
+        localStorage.setItem("motivationSeenDate", today);
+        indicator.style.display = "none";
+    });
+
+});
+</script>
+
+</body>
+</html>

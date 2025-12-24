@@ -1,0 +1,208 @@
+
+
+
+{% extends 'pagefirst/base.html' %}
+{% block content %}
+    <h1 class="page-title">Recommendations</h1>
+
+<div class="recommendations-page">
+    <div class="search-container">
+        <div class="search-wrapper">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search training, nutrition, sleep..."
+            >
+            <button id="searchBtn">🔍</button>
+        </div>
+
+        <button id="addRecBtn" class="add-rec-btn">➕</button>
+    </div>
+
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span id="closeModal" class="close">&times;</span>
+            <h2 class="modal-title">Add a Recommendation</h2>
+
+            <input type="text" id="recTitle" placeholder="Title">
+            <textarea id="recText" placeholder="Write your recommendation..."></textarea>
+            <input type="text" id="recAuthor" placeholder="Your Name">
+            <button id="submitRec">Save</button>
+        </div>
+    </div>
+
+
+    <div id="resultsContainer" class="results-container">
+        <div id="searchResults"></div>
+
+        <div class="recommendations-wrapper">
+
+            {% for rec in recommendations %}
+            <div class="rec-item">
+                <button class="rec-title">
+                    {{ forloop.counter }}. {{ rec.title }}
+                </button>
+
+                <div class="rec-content">
+                    {{ rec.content }}
+                    <small>By: {{ rec.author }}</small>
+                </div>
+            </div>
+                {% endfor %}
+        </div>
+
+
+
+    </div>
+</div>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Модальное окно
+    const modal = document.getElementById("modal");
+    const addRecBtn = document.getElementById("addRecBtn");
+    const closeModal = document.getElementById("closeModal");
+    const submitRec = document.getElementById("submitRec");
+    const resultsContainer = document.getElementById("resultsContainer");
+    const wrapper = document.querySelector(".recommendations-wrapper");
+
+    // Открытие модального окна
+    addRecBtn.addEventListener("click", () => {
+        modal.style.display = "flex";
+    });
+
+    // Закрытие модального окна
+    closeModal.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    // Добавление новой рекомендации
+    submitRec.addEventListener("click", () => {
+        const title = document.getElementById("recTitle").value.trim();
+        const text = document.getElementById("recText").value.trim();
+        const author = document.getElementById("recAuthor").value.trim();
+
+        if (!title || !text) {
+            alert("Please fill in title and recommendation!");
+            return;
+        }
+
+        fetch("/add-recommendation/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: JSON.stringify({
+                title: title,
+                content: text,
+                author: author
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const newRec = document.createElement("div");
+            newRec.classList.add("rec-item");
+            newRec.innerHTML = `
+                <button class="rec-title">${data.title}</button>
+                <div class="rec-content">
+                    <pre>${data.content}</pre>
+                    <small>By: ${data.author || "Anonymous"}</small>
+                </div>
+            `;
+            wrapper.appendChild(newRec);
+
+            // Очистка полей
+            document.getElementById("recTitle").value = "";
+            document.getElementById("recText").value = "";
+            document.getElementById("recAuthor").value = "";
+            modal.style.display = "none";
+        });
+    });
+
+    // Делегирование клика на кнопки раскрытия рекомендаций
+    wrapper.addEventListener("click", (e) => {
+        if (e.target.classList.contains("rec-title")) {
+            const content = e.target.nextElementSibling;
+            content.style.display = content.style.display === "block" ? "none" : "block";
+        }
+    });
+
+    // Поиск
+    const searchInput = document.getElementById("searchInput");
+    const searchBtn = document.getElementById("searchBtn");
+
+    function runSearch() {
+        const query = searchInput.value.trim().toLowerCase();
+        const items = Array.from(wrapper.querySelectorAll(".rec-item"));
+
+        const titleMatches = [];
+        const contentMatches = [];
+
+        items.forEach(item => {
+            const title = item.querySelector(".rec-title")?.innerText.toLowerCase() || "";
+            const content = item.querySelector(".rec-content")?.innerText.toLowerCase() || "";
+
+            if (query && title.includes(query)) {
+                titleMatches.push(item);
+            } else if (query && content.includes(query)) {
+                contentMatches.push(item);
+            }
+        });
+
+        // Очистка контейнера
+        wrapper.innerHTML = "";
+
+        if (query === "") {
+            items.forEach(item => wrapper.appendChild(item));
+            document.getElementById("searchResults").innerHTML = "";
+            return;
+        }
+
+        // Вывод сначала заголовки, потом контент
+        titleMatches.forEach(item => wrapper.appendChild(item));
+        contentMatches.forEach(item => wrapper.appendChild(item));
+
+        // Если ничего не найдено
+        if (titleMatches.length === 0 && contentMatches.length === 0) {
+            document.getElementById("searchResults").innerHTML = `
+                <div class="result-item">
+                    Nothing found for "<strong>${query}</strong>"
+                </div>
+            `;
+        } else {
+            document.getElementById("searchResults").innerHTML = "";
+        }
+    }
+
+    searchBtn.addEventListener("click", runSearch);
+    searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runSearch();
+    });
+
+});
+</script>
+
+
+{% endblock %}
+
+
